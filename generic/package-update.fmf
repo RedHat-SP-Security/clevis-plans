@@ -1,0 +1,43 @@
+# used in
+# https://gitlab.com/redhat/centos-stream/rpms/clevis
+
+summary: package update scenario
+
+execute:
+    how: tmt
+
+prepare:
+  - how: shell
+    order: 90
+    script:
+      # remove installed (tested) clevis and any leftovers
+      - dnf -y remove '*clevis*'
+      # install older clevis
+      - dnf -y install clevis --disablerepo test-artifacts
+
+discover:
+
+
+  - name: Update_scenario_setup
+    how: fmf
+    url: https://gitlab.cee.redhat.com/special-projects/tests/clevis
+    ref: master
+    test:
+      - /Sanity/upgrades-testing
+
+  - name: Update_clevis_package
+    how: shell
+    tests:
+      - name: clevis_update
+        test: dnf -y update '*clevis*'
+        duration: 2m
+
+
+  - name: Test_scenario_post-update
+    how: fmf
+    url: https://gitlab.cee.redhat.com/special-projects/tests/clevis
+    ref: master
+    test:
+      - /Sanity/upgrades-testing
+    environment:
+      IN_PLACE_UPGRADE: "new"
